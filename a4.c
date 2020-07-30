@@ -12,10 +12,9 @@
 
 int n = 0;
 int m = 0;
+sem_t **lock;
+sem_t work;
 
-void listResources();
-int readFile(char* fileName);
-void custCount(char *fileName);
 
 int* available;
 int** maximum;
@@ -23,12 +22,23 @@ int** allocation;
 int** need;
 char input[100] = { 0 };
 
+void listResources();
+int readFile(char* fileName);
+void custCount(char *fileName);
+
+void* threadRun(void*  t);
+int* safety();
+int rq(int threadID, int arr[]);
+int rl(int threadID, int arr[]);
+
+
 int main(int argc, char *argv[]){
     custCount(file);
 
 
     printf("BEGIN%s","\n");
 
+    lock = malloc(sizeof(sem_t*) * n);
     maximum = malloc(sizeof(int*) * n);
     allocation = malloc(sizeof(int*) * n);
     need = malloc(sizeof(int*) * n);
@@ -54,7 +64,151 @@ int main(int argc, char *argv[]){
            need[rows][cols] = maximum[rows][cols] - allocation[rows][cols];
         }
     }
+    sem_init(&work, 0, 0);
+    for (int i = 0; i < n; i++){
+        lock[i] = (sem_t*) malloc(sizeof(sem_t));
+    }
 
+    listResources(available, maximum, allocation, need);
+
+    while(1){
+        fgets(input, 100, stdin);
+        if (strlen(input) > 0) input[strlen(input) - 1] = '\0'; //remove newline
+
+        char *command = strtok(input, " ");
+        if (strcmp(command, "Run") == 0 || strcmp(command, "run") == 0 ){
+            //RUN using bankers algorithm
+            
+            int* sequence;
+            int a[n];
+            int threadID[n];
+            pthread_t tID[n];
+            
+            for (int i = 0; i < n; i++){
+                sem_init(lock[i], 0, 0);
+                a[i] = i;
+                pthread_create(&tID[n], NULL, threadRun, (void*) &a[i]);
+
+            }
+            
+            sleep(1);
+            
+            sequence = safety();
+            
+            if (sequence[0] == -1){
+                printf("%s", "No safe sequence exists.\n");
+            }
+            else{
+                for (int i = 0; i < n; i++){
+                    sem_post(lock[sequence[i]]);
+                    sem_wait(&work);
+                    //free(lock[i]);
+                }
+            }
+            free(sequence);
+        }
+        else if ((strcmp(command, "RQ") == 0) || (strcmp(command, "rq") == 0)){
+
+            command = strtok(NULL, " ");
+            int thread = atoi(command), rval;
+            int arr[m];
+
+            for (int x = 0; x < m; x++){
+                arr[x] = atoi(strtok(NULL, " "));
+            }
+
+            rval = rq(thread, arr);
+            if (rval == 1){
+                printf("Request granted\n");
+            }
+            else{
+                printf("Request denied\n");
+            }
+            
+        }
+        else if ((strcmp(command, "RL") == 0 ) || (strcmp(command, "rl") == 0)){
+            //Release resource
+            command = strtok(NULL, " ");
+            int thread = atoi(command);
+            int arr[m], t = true ,j = 0;
+
+            for (int x = 0; x < m; x++){
+                arr[x] = atoi(strtok(NULL, " "));
+            }
+            for (int x = 0; x < m; x++){
+                if ((arr[x] > allocation[thread][x]) || (arr[x] < 0)) t = false;
+            }
+            if (t == true){
+                rl(thread, arr);
+                printf("Release %s", "success\n");
+            }
+            else{
+                printf("Release %s", "failed.\n");
+            }
+        }
+        else if (strcmp(command, "*") == 0){
+            listResources();
+        }
+        else{
+            printf("%s", "Invalid Input\n");
+        }
+    }
+}
+
+int* safety(){ //I think safety works
+    /*
+    Returns a safe sequence to run threads. If none exists, then the sequence begins with '-1'
+    */
+    int Finish[n];
+    int Work[m];
+    int ind = 0, modified = true;
+    int* sequence = malloc(sizeof(int) * n);
+    for (int i = 0; i < m; i++){
+        Work[i] = available[i];
+    }
+    for (int i = 0; i < n; i++) {
+        Finish[i] = false;
+    }
+
+    while (modified == true){
+        modified = false;
+        for (int i = 0; i < n; i++){
+            int rval = 1;
+            for (int x = 0; x < m; x++){
+                if (need[i][x] > Work[x]){
+                    rval = 0;
+                }
+            }
+            if ((Finish[i] == false) && rval == 1){
+                sequence[ind] = i;
+                ind++;
+                for (int j = 0; j < m; j++){
+                    Work[j] += allocation[i][j];
+                    Finish[i] = true;
+                }
+                modified = true;
+            }
+       }
+    }
+    for (int i = 0; i < n; i++){
+        if (Finish[i] == false){
+            sequence[0] = -1;
+            return sequence;
+        }
+    }
+    return sequence;
+}
+
+int rq(int threadID, int arr[]){
+    /*
+        Request customer threadID be allocated arr[] resources.
+    */
+}
+
+int rl(int threadID, int arr[]){
+    /*
+        Request customer threadID be de-allocated arr[] resources.
+    */
 }
 
 void custCount(char *fileName){
@@ -84,7 +238,6 @@ void custCount(char *fileName){
     }
     fclose(in);
 }
-
 int readFile(char* fileName){
 //Reads from the file and creates maximum array
     FILE *in = fopen(fileName, "r");
@@ -114,6 +267,30 @@ int readFile(char* fileName){
 	}
     fclose(in);
     return 1;
+}
+
+void* threadRun(void* t){
+    /*
+        Runs the thread. Only called in a safe sequence, so each requests the maximum number
+        of resources it needs
+    */
+    int* thread = (int*) t;
+    int arr[m];
+    int arr2[m];
+    sem_wait(lock[*thread]); //The threa is now waiting with the mutex at its thread ID.
+    printf("Thread %d executing:\n", *thread);
+
+    for (int i = 0; i < m; i++){
+        arr[i] = need[*thread][i];
+    }
+    //rq(*thread, arr);
+    for (int i = 0; i < m; i++){
+        arr2[i] = allocation[*thread][i];
+    }
+    //rl(*thread, arr2);    
+    sem_post(&work);
+    printf("Thread %d has completed:\n", *thread);
+    pthread_exit(0);
 }
 
 void listResources(){
