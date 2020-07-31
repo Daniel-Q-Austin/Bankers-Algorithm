@@ -1,3 +1,41 @@
+/*
+* Author 1: Daniel Austin
+* Email: Aust2920@mylaurier.ca
+* Student Number: 180472920
+*
+* Author 2: PUT HERE
+* Email: PUT HERE
+* Student Number: PUT HERE
+*
+* July 31, 2020
+* CP386 Assignment 4
+*
+* The goal of this assignment is to implement Bankers algorithmm for shared resource allocation in C.
+* 
+* Customers are retrieved from the input file, an nxm matrix where a rows correspond to customers, and 
+* columns correspond to the maximum number of resources customers need to execute.
+*
+* The number available resources is defined by user argument at runtime.
+*
+* Commands:
+*   'RQ [int customer] [int input 1] [int input 2] ... [int input n]'
+*       Requests resources inputed be allocated to customer. 
+*       If the request leaves the system unsafe it will be denied
+*
+*   'RL [int customer] [int input 1] [int input 2] ... [int input n]'
+*       Requests resources inputed to be de-allocated from customer
+*
+*   '*' 
+*       Displays all arrays and matrices used.
+*
+*   'Run'
+*       Executes customers as threads in a safe sequence. Each thread requests the resources it needs,
+*       releases them, and lets the next thread in the sequence run
+*
+*    Run with: gcc -pthread a4.c
+*    ./a.out 10 6 7 8 (Or use other input values as needed)
+*/
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,9 +70,11 @@ int rq(int threadID, int arr[]);
 int rl(int threadID, int arr[]);
 
 
+
 int main(int argc, char *argv[]){
     custCount(file);
     //TODO: documentation. Everything is perfect
+
 
     printf("BEGIN%s","\n");
 
@@ -347,3 +387,4 @@ void listResources(){
         printf("%s", "\n");
     }
 }
+
