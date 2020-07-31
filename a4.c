@@ -3,9 +3,9 @@
 * Email: Aust2920@mylaurier.ca
 * Student Number: 180472920
 *
-* Author 2: PUT HERE
-* Email: PUT HERE
-* Student Number: PUT HERE
+* Author 2: Angela Tran
+* Email: Tran2140@mylaurier.ca
+* Student Number: 180392140
 *
 * July 31, 2020
 * CP386 Assignment 4
