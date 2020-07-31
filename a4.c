@@ -1,4 +1,3 @@
-
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +21,7 @@ int** allocation;
 int** need;
 char input[100] = { 0 };
 
+
 void listResources();
 int readFile(char* fileName);
 void custCount(char *fileName);
@@ -34,7 +34,7 @@ int rl(int threadID, int arr[]);
 
 int main(int argc, char *argv[]){
     custCount(file);
-
+    //TODO: documentation. Everything is perfect
 
     printf("BEGIN%s","\n");
 
@@ -203,12 +203,40 @@ int rq(int threadID, int arr[]){
     /*
         Request customer threadID be allocated arr[] resources.
     */
+    for (int i = 0; i < m; i++){
+        if ((allocation[threadID][i] + arr[i] > available[i]) 
+        || (allocation[threadID][i] + arr[i] > maximum[threadID][i]) || (arr[i] < 0)){
+            return -1;
+        }
+    }
+    int *sequence;
+    for (int x = 0; x < m; x++){
+        allocation[threadID][x] += arr[x];
+        available[x] -= arr[x];
+        need[threadID][x] = maximum[threadID][x] - allocation[threadID][x];
+    }
+    sequence = safety();
+    if (*sequence == -1){
+        for (int x = 0; x < m; x++){
+            allocation[threadID][x] -= arr[x];
+            available[x] += arr[x];
+            need[threadID][x] = maximum[threadID][x] - allocation[threadID][x];
+        }
+        return -1;
+    }
+    return 1;
 }
 
 int rl(int threadID, int arr[]){
     /*
         Request customer threadID be de-allocated arr[] resources.
     */
+    for (int x = 0; x < m; x++){
+        allocation[threadID][x] -= arr[x];
+        available[x] += arr[x];
+        need[threadID][x] = maximum[threadID][x] - allocation[threadID][x];
+    }
+    
 }
 
 void custCount(char *fileName){
@@ -283,11 +311,11 @@ void* threadRun(void* t){
     for (int i = 0; i < m; i++){
         arr[i] = need[*thread][i];
     }
-    //rq(*thread, arr);
+    rq(*thread, arr);
     for (int i = 0; i < m; i++){
         arr2[i] = allocation[*thread][i];
     }
-    //rl(*thread, arr2);    
+    rl(*thread, arr2);    
     sem_post(&work);
     printf("Thread %d has completed:\n", *thread);
     pthread_exit(0);
