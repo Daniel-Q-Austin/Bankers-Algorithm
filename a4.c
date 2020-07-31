@@ -203,6 +203,28 @@ int rq(int threadID, int arr[]){
     /*
         Request customer threadID be allocated arr[] resources.
     */
+    for (int i = 0; i < m; i++){
+        if ((allocation[threadID][i] + arr[i] > available[i]) 
+        || (allocation[threadID][i] + arr[i] > maximum[threadID][i]) || (arr[i] < 0)){
+            return -1;
+        }
+    }
+    int *sequence;
+    for (int x = 0; x < m; x++){
+        allocation[threadID][x] += arr[x];
+        available[x] -= arr[x];
+        need[threadID][x] = maximum[threadID][x] - allocation[threadID][x];
+    }
+    sequence = safety();
+    if (*sequence == -1){
+        for (int x = 0; x < m; x++){
+            allocation[threadID][x] -= arr[x];
+            available[x] += arr[x];
+            need[threadID][x] = maximum[threadID][x] - allocation[threadID][x];
+        }
+        return -1;
+    }
+    return 1;
 }
 
 int rl(int threadID, int arr[]){
