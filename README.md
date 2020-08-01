@@ -29,7 +29,7 @@ Code for Cust. Count:
 
 Individual contribution (function wise):
 Daniel: safety algorithm, threadrun, release (rl)
-Angela: listResources, readFile, custCount
+Angela: listResources, readFile, custCount, request (rq)
 
 Features: allocate and release the resources in the allocation array, display the current state of various arrays, and create a safe sequence based on those current states.
 
