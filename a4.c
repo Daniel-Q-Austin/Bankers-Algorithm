@@ -1,4 +1,6 @@
 /*
+* https://github.com/Daniel-Q-Austin/Bankers-Algorithm
+*
 * Author 1: Daniel Austin
 * Email: Aust2920@mylaurier.ca
 * Student Number: 180472920
