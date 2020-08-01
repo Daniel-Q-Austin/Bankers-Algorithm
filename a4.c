@@ -9,6 +9,7 @@
 * Author 2: Angela Tran
 * Email: Tran2140@mylaurier.ca
 * Student Number: 180392140
+* Github ID: angela-kpt
 *
 * July 31, 2020
 * CP386 Assignment 4
