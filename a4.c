@@ -4,6 +4,7 @@
 * Author 1: Daniel Austin
 * Email: Aust2920@mylaurier.ca
 * Student Number: 180472920
+* Github ID: Daniel-Q-Austin
 *
 * Author 2: Angela Tran
 * Email: Tran2140@mylaurier.ca
